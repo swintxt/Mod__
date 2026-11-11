@@ -1,0 +1,32 @@
+name: Build ModBuilder.exe
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build exe
+        run: pyinstaller --onefile --windowed --name ModBuilder mod_builder.py
+
+      - name: Smoke test (exe exists)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist/ModBuilder.exe)) { throw "ModBuilder.exe not built" }
+          Get-Item dist/ModBuilder.exe | Select-Object Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ModBuilder-exe
+          path: dist/ModBuilder.exe
